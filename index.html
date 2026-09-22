@@ -151,7 +151,7 @@
         </button>
         <button type="button" data-os="ios">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7a4.5 4.5 0 0 0-3.5-1.9c-1.5-.2-2.9.9-3.7.9s-1.9-.8-3.2-.8a4.7 4.7 0 0 0-4 2.4c-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4s1.7-.8 3.1-.8 1.9.8 3.2.8 2.1-1.2 2.9-2.4a10 10 0 0 0 1.3-2.7 4.2 4.2 0 0 1-2.4-4zM14 5.4A4.3 4.3 0 0 0 15 2a4.4 4.4 0 0 0-2.9 1.5 4.1 4.1 0 0 0-1 3.2A3.6 3.6 0 0 0 14 5.4z"/></svg>
-          <span><b>iPhone / iPad</b><small>Safari atau Chrome, tambahkan ke Layar Utama</small></span>
+          <span><b>iPhone / iPad</b><small>Safari, tambahkan ke Layar Utama</small></span>
         </button>
       </div>
 
@@ -238,6 +238,14 @@
 
       if (sudahTerpasang) {
         tampilInfo('<b>SILABNU sudah terpasang di perangkat ini.</b> Buka dari layar utama atau menu Start.');
+        return;
+      }
+
+      if (os === 'ios' && !safariIOS) {
+        tampilInfo('Di iPhone/iPad, SILABNU hanya bisa dipasang lewat <b>Safari</b>.' +
+          '<div class="salin" style="margin-top:10px"><a class="tombol" style="flex:1;text-align:center;text-decoration:none" ' +
+          'href="x-safari-' + LINK + '">Buka di Safari</a></div>' +
+          '<p style="margin:10px 0 0">Kalau tombol di atas tidak berfungsi, salin link ini lalu tempel di Safari:</p>' + kotakSalin());
         return;
       }
 
