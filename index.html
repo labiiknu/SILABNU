@@ -30,17 +30,25 @@
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       color: var(--teks);
-      /* Konten tidak tertutup poni kamera dan bilah bawah iPhone */
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      overflow: hidden;
     }
 
+    /*
+     * Iframe wajib diberi lebar dan tinggi tegas. Tanpa itu, browser memakai ukuran
+     * bawaan iframe (300 × 150 piksel) sehingga SILABNU tampil sangat kecil.
+     */
     #aplikasi {
-      position: fixed; inset: 0;
-      top: env(safe-area-inset-top, 0px);
-      bottom: env(safe-area-inset-bottom, 0px);
-      width: 100%; height: auto; border: 0;
+      position: fixed; left: 0; top: env(safe-area-inset-top, 0px);
+      display: block; border: 0;
+      width: 100vw;
+      height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       opacity: 0; transition: opacity .35s ease;
+    }
+    /* Tinggi layar yang memperhitungkan bilah browser di ponsel, bila didukung */
+    @supports (height: 100dvh) {
+      #aplikasi {
+        height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      }
     }
     #aplikasi.siap { opacity: 1; }
 
