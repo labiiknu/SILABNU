@@ -4,7 +4,7 @@
  * diinstal dan tetap terbuka saat koneksi lemah. Isi SILABNU sendiri berasal
  * dari Apps Script dan selalu dimuat langsung dari server, tidak disimpan di sini.
  */
-const VERSI_CACHE = 'silabnu-v1';
+const VERSI_CACHE = 'silabnu-v2';
 const BERKAS_INTI = [
   './',
   './index.html',
