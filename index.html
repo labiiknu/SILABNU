@@ -5,134 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SILABNU — Laboratorium Keperawatan IIKNU</title>
   <meta name="description" content="Layanan peminjaman alat, kontrak ruangan, dan absensi Laboratorium Keperawatan IIKNU Tuban.">
-
-  <!-- Identitas aplikasi -->
-  <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0D5C3A">
-  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-
-  <!-- Khusus iPhone -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SILABNU">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
-    :root {
-      --hijau: #0D5C3A;
-      --hijau-tua: #083D27;
-      --kertas: #FFFFFF;
-      --teks: #0F172A;
-      --redup: #5B6B64;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: var(--kertas); }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      color: var(--teks);
+    /* KUNCI PERBAIKAN: halaman dan iframe dipaksa setinggi jendela */
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
       overflow: hidden;
+      background: #0D5C3A;
+    }
+    #app {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #fff;
     }
 
-    /*
-     * Iframe wajib diberi lebar dan tinggi tegas. Tanpa itu, browser memakai ukuran
-     * bawaan iframe (300 × 150 piksel) sehingga SILABNU tampil sangat kecil.
-     */
-    #aplikasi {
-      position: fixed; left: 0; top: env(safe-area-inset-top, 0px);
-      display: block; border: 0;
-      width: 100vw;
-      height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-      opacity: 0; transition: opacity .35s ease;
-    }
-    /* Tinggi layar yang memperhitungkan bilah browser di ponsel, bila didukung */
-    @supports (height: 100dvh) {
-      #aplikasi {
-        height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-      }
-    }
-    #aplikasi.siap { opacity: 1; }
-
-    /* Layar pembuka selama SILABNU dimuat */
-    #pembuka {
-      position: fixed; inset: 0; z-index: 10;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 6px; background: var(--kertas); padding: 24px; text-align: center;
+    /* Layar pembuka, menutupi iframe sampai GAS selesai dimuat */
+    #splash {
+      position: fixed; inset: 0; z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      background: #0D5C3A; color: #fff;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      text-align: center; padding: 24px;
       transition: opacity .35s ease;
     }
-    #pembuka.hilang { opacity: 0; pointer-events: none; }
-    .kotak-logo {
-      width: 64px; height: 64px; border-radius: 16px; background: #fff;
-      border: 1px solid rgba(15,23,42,.12); padding: 7px;
-      animation: denyut 1.4s ease-in-out infinite;
-    }
-    .kotak-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
-    @keyframes denyut { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
-    @media (prefers-reduced-motion: reduce) { .kotak-logo { animation: none; } }
-    #pembuka .judul { font-size: 16px; font-weight: 600; color: var(--teks); margin-top: 4px; }
-    #pembuka .sub { font-size: 13px; color: var(--redup); }
+    #splash.hide { opacity: 0; pointer-events: none; }
+    #splash img { width: 88px; height: 88px; border-radius: 20px; background: #fff; padding: 6px; }
+    #splash strong { font-size: 1.05rem; font-weight: 600; }
+    #splash span { font-size: .85rem; opacity: .8; }
+    #splash a { color: #fff; font-size: .8rem; opacity: .7; margin-top: 16px; }
 
-    /* Keterangan saat koneksi terputus */
-    #luring {
-      position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-      z-index: 20; display: none; background: var(--hijau-tua); color: #fff;
-      border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.45;
+    /* Pesan offline */
+    #offline {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 3;
+      display: none;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      background: #7a1f1f; color: #fff;
+      font: .85rem system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      text-align: center;
     }
-    #luring.tampil { display: block; }
+    #offline.show { display: block; }
+
+    @media (prefers-reduced-motion: reduce) { #splash { transition: none; } }
   </style>
 </head>
 <body>
-  <div id="pembuka" role="status" aria-live="polite">
-    <div class="kotak-logo"><img src="icons/icon-192.png" alt="Logo IIKNU" width="50" height="50"></div>
-    <p class="judul" style="margin-top:16px">Menyiapkan SILABNU…</p>
-    <p class="sub">Portal Layanan Laboratorium Keperawatan IIKNU</p>
-  </div>
-
-  <!--
-    Alamat aplikasi Apps Script (sama dengan yang terpasang di tema Blogger).
-    Ubah hanya bila Anda membuat deployment baru dengan alamat berbeda.
-  -->
-  <iframe
-    id="aplikasi"
+  <iframe id="app"
+    src="https://script.google.com/macros/s/AKfycbzhJuFJ5Mer5MM8K3U5DQtATaKoZ5kJBtUDP5ql_N9q-9paRzL_IixBNFCfS7lsCPXB/exec"
     title="SILABNU"
-    allow="camera; clipboard-write; fullscreen"
-    referrerpolicy="no-referrer-when-downgrade"
-    src="https://script.google.com/macros/s/AKfycbzhJuFJ5Mer5MM8K3U5DQtATaKoZ5kJBtUDP5ql_N9q-9paRzL_IixBNFCfS7lsCPXB/exec">
-  </iframe>
+    allow="camera; clipboard-write"></iframe>
 
-  <div id="luring" role="alert">
-    Tidak ada koneksi internet. SILABNU akan dimuat ulang otomatis begitu koneksi kembali.
+  <div id="splash">
+    <img src="icons/icon-192.png" alt="Logo IIKNU">
+    <strong>Menyiapkan SILABNU…</strong>
+    <span>Portal Layanan Laboratorium Keperawatan IIKNU</span>
+    <a id="direct" href="https://script.google.com/macros/s/AKfycbzhJuFJ5Mer5MM8K3U5DQtATaKoZ5kJBtUDP5ql_N9q-9paRzL_IixBNFCfS7lsCPXB/exec" target="_blank" rel="noopener" hidden>Buka langsung di browser</a>
   </div>
+
+  <div id="offline">Tidak ada koneksi internet. SILABNU akan dimuat ulang otomatis begitu koneksi kembali.</div>
 
   <script>
-    const bingkai = document.getElementById('aplikasi');
-    const pembuka = document.getElementById('pembuka');
-    const luring = document.getElementById('luring');
+    var app = document.getElementById('app');
+    var splash = document.getElementById('splash');
 
-    // Sembunyikan layar pembuka begitu SILABNU selesai dimuat
-    function tampilkanAplikasi() {
-      bingkai.classList.add('siap');
-      setTimeout(() => pembuka.classList.add('hilang'), 250);
-    }
-    bingkai.addEventListener('load', tampilkanAplikasi);
-    // Cadangan bila peristiwa load tidak terpicu
-    setTimeout(tampilkanAplikasi, 12000);
+    app.addEventListener('load', function () { splash.classList.add('hide'); });
+    // Kalau GAS lambat, tampilkan tautan cadangan setelah 12 detik
+    setTimeout(function () { document.getElementById('direct').hidden = false; }, 12000);
 
-    // Keterangan saat luring, lalu muat ulang ketika koneksi kembali
-    function cekKoneksi() {
-      luring.classList.toggle('tampil', !navigator.onLine);
-    }
+    var offline = document.getElementById('offline');
+    function cekKoneksi() { offline.classList.toggle('show', !navigator.onLine); }
     window.addEventListener('offline', cekKoneksi);
-    window.addEventListener('online', () => {
-      cekKoneksi();
-      bingkai.src = bingkai.src;
-    });
+    window.addEventListener('online', function () { cekKoneksi(); app.src = app.src; });
     cekKoneksi();
 
-    // Daftarkan service worker agar aplikasi dapat diinstal
+    // Sesuaikan nama file service worker dengan yang ada di repo
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-      });
+      navigator.serviceWorker.register('sw.js').catch(function () {});
     }
   </script>
 </body>
