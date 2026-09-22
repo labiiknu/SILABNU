@@ -4,7 +4,7 @@
  * diinstal dan tetap terbuka saat koneksi lemah. Isi SILABNU sendiri berasal
  * dari Apps Script dan selalu dimuat langsung dari server, tidak disimpan di sini.
  */
-const VERSI_CACHE = 'silabnu-v9';
+const VERSI_CACHE = 'silabnu-v10';
 const BERKAS_INTI = [
   './',
   './index.html',
@@ -39,7 +39,14 @@ self.addEventListener('fetch', event => {
   // Halaman: ambil yang terbaru, pakai simpanan bila luring
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('./index.html'))
+      // no-store: lewati cache HTTP browser (GitHub Pages menyimpan halaman hingga 10 menit)
+      fetch(event.request, { cache: 'no-store' })
+        .then(res => {
+          const salinan = res.clone();
+          caches.open(VERSI_CACHE).then(cache => cache.put('./index.html', salinan));
+          return res;
+        })
+        .catch(() => caches.match('./index.html'))
     );
     return;
   }
